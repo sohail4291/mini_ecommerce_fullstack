@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  }
+
+
+enum Role {
+   USER 
+   ADMIN 
+   }
+enum OrderStatus {
+   PAID 
+   SHIPPED 
+   DELIVERED 
+   CANCELLED
+    }
+
+model User {
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String            // bcrypt hash
+  role Role @default(USER)
+  cart CartItem[]
+  orders Order[]
+}
+model Product {
+  id Int @id @default(autoincrement())
+  name String
+  description String @default("")
+  price Int                  // paise (integer = no float bugs)
+  stock Int
+  imageUrl String @default("")
+  cartItems CartItem[]
+  orderItems OrderItem[]
+}
+model CartItem {
+  id Int @id @default(autoincrement())
+  userId Int
+  productId Int
+  quantity Int
+  user User @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+  @@unique([userId, productId])
+}
+model Order {
+  id Int @id @default(autoincrement())
+  userId Int
+  total Int
+  address String
+  status OrderStatus @default(PAID)
+  createdAt DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
+  items OrderItem[]
+}
+model OrderItem {
+  id Int @id @default(autoincrement())
+  orderId Int
+  productId Int
+  quantity Int
+  price Int                  // price snapshot at purchase time
+  order Order @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
